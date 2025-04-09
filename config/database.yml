@@ -81,9 +81,10 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: helpjuice_search_api_production
-    username: helpjuice_search_api
-    password: <%= ENV["HELPJUICE_SEARCH_API_DATABASE_PASSWORD"] %>
+    url: <%= ENV['DATABASE_URL'] %>
+    # database: helpjuice_search_api_production
+    # username: helpjuice_search_api
+    # password: <%= ENV["HELPJUICE_SEARCH_API_DATABASE_PASSWORD"] %>
   cache:
     <<: *primary_production
     database: helpjuice_search_api_production_cache
