@@ -21,7 +21,18 @@ class SearchEntriesController < ApplicationController
 			end
     end
   
-    def index
-      render json: SearchEntry.group(:term).order('count_all DESC').count
-    end
+    # def index
+	# 	@analytics = SearchEntry.group(:term).order('count_all DESC').count
+	# 	render template: 'search_entries/index'
+	# end
+
+	def index
+		@analytics = SearchEntry.group(:term).order('count_all DESC').count
+	  
+		if request.format.json?
+		  render json: @analytics
+		else
+		  render template: 'search_entries/index'
+		end
+	  end
 end

@@ -1,70 +1,119 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Helpjuice Search</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+  <head>
+    <title>Helpjuice Search</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
 
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f5f6fa;
-    }
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 50px;
+        font-family: Arial, sans-serif;
+        height: 100vh;
+        margin: 0;
+        background-color: #f5f6fa;
+      }
 
-    #searchInput {
-      padding: 12px 16px;
-      width: 80%;
-      max-width: 400px;
-      font-size: 18px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-      outline: none;
-      transition: border-color 0.3s;
-    }
+      #searchInput {
+        padding: 12px 16px;
+        width: 80%;
+        max-width: 400px;
+        font-size: 18px;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        outline: none;
+        transition: border-color 0.3s;
+      }
 
-    #searchInput:focus {
-      border-color: #4a90e2;
-    }
-  </style>
-</head>
-<body>
-  <input type="text" id="searchInput" placeholder="Search...">
-  <script>
-    let sessionId = null;
-    let timeout;
+      #searchInput:focus {
+        border-color: #4a90e2;
+      }
 
-    async function initSession() {
-      const res = await fetch('/search_sessions', { method: 'POST' });
-      const data = await res.json();
-      sessionId = data.session_id;
-    }
+      #results {
+        margin-top: 20px;
+        width: 320px;
+      }
+      #results ul {
+        list-style: none;
+        padding: 0;
+      }
+      #results li {
+        padding: 5px 0;
+        border-bottom: 1px solid #ccc;
+      }
+      .analytics-button {
+        margin-top: 20px;
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <input type="text" id="searchInput" placeholder="Search..." />
+    <div id="results"></div>
+    <a href="/analytics.html" class="analytics-button">View Analytics</a>
 
-    async function saveSearch(term) {
-      await fetch('/search_entries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ term, search_session_id: sessionId }),
+    <script>
+      let sessionId = null;
+      let timeout;
+
+      async function initSession() {
+        const res = await fetch("/search_sessions", { method: "POST" });
+        const data = await res.json();
+        sessionId = data.session_id;
+      }
+
+      async function saveSearch(term) {
+        await fetch("/search_entries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ term, search_session_id: sessionId }),
+        });
+      }
+
+      async function fetchArticles(term) {
+        const res = await fetch(`/articles?query=${encodeURIComponent(term)}`);
+        const articles = await res.json();
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML =
+          "<ul>" +
+          articles
+            .slice(0, 3)
+            .map((a) => `<li>${a.title}</li>`)
+            .join("") +
+          "</ul>";
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        await initSession();
+        const input = document.getElementById("searchInput");
+        input.addEventListener("input", () => {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            const term = input.value.trim();
+
+            // Clear results if input is empty
+            const resultsDiv = document.getElementById("results");
+            if (term.length === 0) {
+              resultsDiv.innerHTML = "";
+              return;
+            }
+
+            if (term.length > 0) {
+              saveSearch(term);
+              fetchArticles(term);
+            }
+          }, 1000);
+        });
       });
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      await initSession();
-      const input = document.getElementById('searchInput');
-      input.addEventListener('input', () => {
-        // if (!sessionId) return;
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          const term = input.value.trim();
-          if (term.length > 0) saveSearch(term);
-        }, 1000);
-      });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
