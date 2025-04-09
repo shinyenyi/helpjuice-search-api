@@ -47,6 +47,7 @@ group :development, :test do
 
   gem "rspec-rails"
   gem "rack-cors"
+  gem "faker"
 end
 
 
